@@ -13,8 +13,37 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
 	if (err) throw err;
 	console.log("connected as id " + connection.threadId)
+
+	showProducts();
 });
 
-function purchaseProduct() {
-	
+function showProducts() {
+	console.log("Selecting all products...\n");
+	  connection.query("SELECT * FROM products", function(err, res) {
+	    if (err) throw err;
+	    console.log(res);
+	    	start();
+	 });
 }
+
+function start() {
+	connection.query("SELECT * FROM products", function(err, results) {
+		if (err) throw err;
+	inquirer
+		.prompt([
+			{
+				name: "purchase",
+				type: "rawlist",
+				choices: function() {
+					var purchaseArray = [];
+					for (var i = 0; i <results.length; i++) {
+						purchaseArray.push(results[i].product_name);
+					}
+					return purchaseArray;
+				},
+				message: "What would you like to purchase?"
+			}
+		])
+	});
+}
+
