@@ -18,10 +18,12 @@ connection.connect(function(err) {
 });
 //show products at connection to store
 function showProducts() {
-	console.log("Selecting all products...\n");
+	console.log("\nSelecting all products...\n");
 	  connection.query("SELECT * FROM products", function(err, res) {
 	    if (err) throw err;
-	    console.log(res);
+	    	for (var i = 0; i < res.length; i++)
+	    console.log("Item # " + res[i].item_id + " " + res[i].department_name + ": " + res[i].product_name + " $" + res[i].price);
+	    // console.log(res);
 	    	start();
 	 });
 }
@@ -32,7 +34,7 @@ function start() {
 	inquirer
 		.prompt([
 			{
-				name: "purchase",
+				name: "choice",
 				type: "rawlist",
 				choices: function() {
 					var purchaseArray = [];
@@ -48,24 +50,42 @@ function start() {
 				type: "input",
 				message: "How many would you like?",
 				validate: function(value) {
-					if (isNaN(vlaue) === false) {
+					if (isNaN(value) === false) {
 						return true;
 					}
 					return false;
 				}
 			}
 		])
-			.then(function(answer) {
-				var chosenItem;
-				for (var i = 0; i < results.length; i++) {
-					if(results[i].product_name === answer.product) {
-						chosenItem = results[i];
-						console.log(chosenItem);
-					}
+		.then(function(answer) {
+			var chosenItem;
+			for (var i = 0; i < results.length; i++) {
+				if(results[i].product_name === answer.choice) {
+					chosenItem = results[i];
+					// console.log(chosenItem);
 				}
-				//update the quantity
+			}
+			//update the quantity
+			if (chosenItem.stock_quantity <= parseInt(answer.quantity)) {
+				connection.query(
+					"UPDATE products SET ? WHERE ?",
+					[
+					{
+						stock_quantity: stock_quantity - answer.quantity
+					},
+					{
+						product_name: chosenItem.product_name
+					}
+					],
+					function(error) {
+						if (error) throw err;
+						console.log("Quantity updated.");
+						showProducts();
+					}
+				);
+			}
 
-			})
+		});
 	});
 }
 
